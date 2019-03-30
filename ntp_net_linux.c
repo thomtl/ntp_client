@@ -13,21 +13,22 @@ static void error(char* str, int code){
 
 bool ntp_net_initialize_connection(struct ntp_net_socket* sock){
     sock->socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
     if(sock->socket_fd < 0){
         error("socket() failed, it returned ", sock->socket_fd);
         return false;
     } 
 
     sock->server = gethostbyname(host_name);
+    if(sock->server == NULL){
+        error("gethostbyname() failed, it returned ", (uint64_t)sock->server);
+        return false;
+    }
 
-    if(sock->server == NULL) return false;
-
-    bzero(&sock->server_addr, sizeof(sock->server_addr));
+    memset(&sock->server_addr, 0, sizeof(sock->server_addr));
 
     sock->server_addr.sin_family = AF_INET;
 
-    bcopy((char*)sock->server->h_addr_list[0], (char*)&sock->server_addr.sin_addr.s_addr, sock->server->h_length);
+    memcpy((char*)&sock->server_addr.sin_addr.s_addr, (char*)sock->server->h_addr_list[0], sock->server->h_length);
 
     sock->server_addr.sin_port = htons(port_number);
 

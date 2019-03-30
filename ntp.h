@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <ctype.h>
 
-
 #include "ntp_net_linux.h" // Include header for own net stuff
 
 struct ntp_packet {
@@ -62,8 +61,11 @@ struct ntp_packet_info {
 #define NTP_GET_MODE (li_vn_mode) ((li_vn_mode) & (0x7))
 
 #define NTP_LI_VN_MODE_VERSION_3 0x1b
+#define NTP_LI_VN_MODE_VERSION_4 0x23
 
 #define NTP_TIMESTAMP_DELTA 2208988800ull
+
+#define NTP_USE_VERSION_4 // Undefine if you want to use 3
 
 bool ntp_get_time(time_t* time);
 bool ntp_get_packet_info(struct ntp_packet_info* packet_info);

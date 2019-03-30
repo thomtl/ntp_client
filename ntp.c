@@ -2,22 +2,30 @@
 
 #include <stdio.h>
 
+static bool ntp_get_packet(struct ntp_packet* packet){
+    memset(packet, 0, sizeof(struct ntp_packet));
+
+    #ifdef NTP_USE_VERSION_4
+    packet->li_vn_mode = NTP_LI_VN_MODE_VERSION_4;
+    #else
+    packet->li_vn_mode = NTP_LI_VN_MODE_VERSION_3;
+    #endif
+
+    struct ntp_net_socket socket;
+
+    if(!ntp_net_initialize_connection(&socket)) return false;
+    if(!ntp_net_connect(&socket)) return false;
+    if(!ntp_net_write(&socket, (uint8_t*)packet, sizeof(struct ntp_packet))) return false;
+    if(!ntp_net_read(&socket, (uint8_t*)packet, sizeof(struct ntp_packet))) return false;
+}
+
 bool ntp_get_time(time_t* time){
 
     assert(sizeof(struct ntp_packet) == 48);
 
     struct ntp_packet packet;
 
-    memset(&packet, 0, sizeof(struct ntp_packet));
-
-    packet.li_vn_mode = NTP_LI_VN_MODE_VERSION_3;
-
-    struct ntp_net_socket socket;
-
-    if(!ntp_net_initialize_connection(&socket)) return false;
-    if(!ntp_net_connect(&socket)) return false;
-    if(!ntp_net_write(&socket, (uint8_t*)&packet, sizeof(struct ntp_packet))) return false;
-    if(!ntp_net_read(&socket, (uint8_t*)&packet, sizeof(struct ntp_packet))) return false;
+    ntp_get_packet(&packet);
 
     uint32_t seconds = ntohl(packet.tx_tm_s);
 
@@ -31,19 +39,7 @@ bool ntp_get_packet_info(struct ntp_packet_info* packet_info){
 
     struct ntp_packet packet;
 
-    memset(&packet, 0, sizeof(struct ntp_packet));
-
-    packet.li_vn_mode = NTP_LI_VN_MODE_VERSION_3;
-
-    struct ntp_net_socket socket;
-
-    if(!ntp_net_initialize_connection(&socket)) return false;
-
-    if(!ntp_net_connect(&socket)) return false;
-
-    if(!ntp_net_write(&socket, (uint8_t*)&packet, sizeof(struct ntp_packet))) return false;
-
-    if(!ntp_net_read(&socket, (uint8_t*)&packet, sizeof(struct ntp_packet))) return false;
+    ntp_get_packet(&packet);
 
     packet_info->stratum = packet.stratum;
 
